@@ -7,14 +7,14 @@ mode con: cols=100 lines=30
 :menu
 cls
 echo ============================================================
-echo            Network Utility Tools
+echo                  Network Utility Tools
 echo ============================================================
 echo [1] View Computer Information
 echo [2] Reset Network
 echo [3] Manage Temp Files (Check/Delete)
 echo [4] Check for Updates
 echo [5] Exit
-echo -----------------------------------------------------------
+echo ------------------------------------------------------------
 set /p option=Select an option (1-5): 
 
 if "%option%"=="1" goto computerInfo
@@ -29,27 +29,48 @@ goto menu
 :computerInfo
 cls
 echo ============================================================
-echo            Computer Information Overview
+echo                 Computer Information Overview
 echo ============================================================
-echo Hostname          : %COMPUTERNAME%
-echo Logged User       : %USERNAME%
-echo OS Version        : %OS%
-echo Architecture      : %PROCESSOR_ARCHITECTURE%
-echo Processor         : %PROCESSOR_IDENTIFIER%
+echo Hostname           : %COMPUTERNAME%
+echo Logged User        : %USERNAME%
+echo OS Version         : %OS%
+echo Architecture       : %PROCESSOR_ARCHITECTURE%
+
+echo.
+echo OS Name:
+for /f "delims=" %%a in ('wmic os get Caption ^| findstr /i /v "Caption"') do echo     %%a
+
+echo Processor:
+for /f "delims=" %%a in ('wmic cpu get Name ^| findstr /i /v "Name"') do echo     %%a
+
+echo Cores / Threads:
+wmic cpu get NumberOfCores,NumberOfLogicalProcessors /value
+
+echo Baseboard:
+wmic baseboard get Manufacturer, Product, SerialNumber /value
+
+echo BIOS Version:
+wmic bios get SMBIOSBIOSVersion /value
+
+echo.
 for /f "tokens=2 delims=:" %%I in ('ipconfig ^| findstr "IPv4"') do set ip=%%I
-echo IP Address        : %ip%
 for /f "tokens=2 delims=:" %%I in ('ipconfig ^| findstr "Subnet"') do set subnet=%%I
-echo Subnet Mask       : %subnet%
 for /f "tokens=2 delims=:" %%I in ('ipconfig ^| findstr "DNS"') do set dns=%%I
-echo DNS Servers       : %dns%
-echo -----------------------------------------------------------
-echo Memory (Total): 
-wmic OS get TotalVisibleMemorySize /Value
-echo Free Memory (Available): 
-wmic OS get FreePhysicalMemory /Value
-echo Disk Space (C:) :
-wmic logicaldisk where "DeviceID='C:'" get FreeSpace, Size
-echo -----------------------------------------------------------
+echo IP Address         :%ip%
+echo Subnet Mask        :%subnet%
+echo DNS Servers        :%dns%
+
+echo.
+echo Memory:
+wmic OS get TotalVisibleMemorySize,FreePhysicalMemory /value
+
+echo Virtual Memory:
+wmic pagefile get AllocatedBaseSize,CurrentUsage /value
+
+echo Disk (C:):
+wmic logicaldisk where "DeviceID='C:'" get Size,FreeSpace /value
+
+echo ------------------------------------------------------------
 pause
 goto menu
 
@@ -57,7 +78,7 @@ goto menu
 :resetNetwork
 cls
 echo ============================================================
-echo            Network Reset Confirmation
+echo                 Network Reset Confirmation
 echo ============================================================
 echo This tool will:
 echo - Release current IP
@@ -74,25 +95,25 @@ goto menu
 cls
 echo Releasing IP Address...
 ipconfig /release
-timeout /t 2
+timeout /t 2 >nul
 
 echo Flushing DNS Cache...
 ipconfig /flushdns
-timeout /t 2
+timeout /t 2 >nul
 
 echo Renewing IP Address...
 ipconfig /renew
-timeout /t 2
+timeout /t 2 >nul
 
 echo Disconnecting Wi-Fi...
 netsh wlan disconnect
-timeout /t 2
+timeout /t 2 >nul
 
 echo Reconnecting to Wi-Fi...
 netsh wlan connect name="WiFiName"
-timeout /t 2
+timeout /t 2 >nul
 
-echo -----------------------------------------------------------
+echo ------------------------------------------------------------
 echo Network reset completed successfully!
 pause
 goto menu
@@ -101,27 +122,28 @@ goto menu
 :manageTempFiles
 cls
 set tempDir=%TEMP%
-set tempFilesCount=0
-set tempSize=0
+set /a tempFilesCount=0
+set /a tempSize=0
 
-for /r "%tempDir%" %%A in (*) do (
+for /f "delims=" %%F in ('dir /a /s /b "%tempDir%" 2^>nul') do (
     set /a tempFilesCount+=1
-    set /a tempSize+=%%~zA
+    for %%A in ("%%F") do set /a tempSize+=%%~zA
 )
 
-set /a tempSizeMB=%tempSize%/1048576
+set /a tempSizeMB=%tempSize% / 1048576
+
 echo ============================================================
-echo            Temp File Cleaner
+echo                 Temp File Cleaner
 echo ============================================================
-echo Temp folder path: %tempDir%
-echo Total temp files: %tempFilesCount%
-echo Total size used : %tempSizeMB% MB
-echo -----------------------------------------------------------
+echo Temp folder path : %tempDir%
+echo Total temp files : %tempFilesCount%
+echo Total size used  : %tempSizeMB% MB
+echo ------------------------------------------------------------
 set /p deleteTemp=Do you want to delete all temp files? (Y/N): 
 
 if /i "%deleteTemp%"=="Y" (
     echo Deleting all temp files...
-    del /f /q "%tempDir%\*"
+    del /f /q "%tempDir%\*" >nul 2>&1
     echo Temp files deleted.
 ) else (
     echo Temp files not deleted.
@@ -134,21 +156,24 @@ goto menu
 :checkUpdates
 cls
 echo ============================================================
-echo Checking for updates from GitHub...
+echo                 Checking for Updates
 echo ============================================================
-echo This may take a few seconds.
+echo Checking GitHub for the latest version...
+echo ------------------------------------------------------------
+
+:: Download updated script
 curl -s -o "%TEMP%\network-tools-updated.bat" "https://raw.githubusercontent.com/BearKingX/network/main/network-tools.bat"
 
-:: Check if the update file was downloaded
 if exist "%TEMP%\network-tools-updated.bat" (
     echo Update downloaded successfully.
-    echo Replacing the current script with the new version...
-    copy /y "%TEMP%\network-tools-updated.bat" "%~f0"
-    echo Update complete! Returning to the main menu...
-    timeout /t 2
+    echo Replacing current version...
+    copy /y "%TEMP%\network-tools-updated.bat" "%~f0" >nul
+    echo Update applied. Returning to main menu...
+    timeout /t 2 >nul
     goto menu
 ) else (
-    echo Failed to download the update. Please check your internet connection or GitHub URL.
+    echo Failed to download update.
+    echo Please check internet connection or GitHub URL.
     pause
     goto menu
 )
