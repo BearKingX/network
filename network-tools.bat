@@ -7,7 +7,7 @@ mode con: cols=100 lines=30
 :menu
 cls
 echo ============================================================
-echo            Network Utility 
+echo            Network Utility Tools
 echo ============================================================
 echo [1] View Computer Information
 echo [2] Reset Network
