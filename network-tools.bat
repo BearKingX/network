@@ -60,18 +60,43 @@ goto menu
 cls
 echo Releasing IP Address...
 ipconfig /release
+if errorlevel 1 (
+    echo Error releasing IP address.
+    pause
+    goto menu
+)
 timeout /t 2 >nul
 echo Flushing DNS Cache...
 ipconfig /flushdns
+if errorlevel 1 (
+    echo Error flushing DNS cache.
+    pause
+    goto menu
+)
 timeout /t 2 >nul
 echo Renewing IP Address...
 ipconfig /renew
+if errorlevel 1 (
+    echo Error renewing IP address.
+    pause
+    goto menu
+)
 timeout /t 2 >nul
 echo Disconnecting Wi-Fi...
 netsh wlan disconnect
+if errorlevel 1 (
+    echo Error disconnecting Wi-Fi.
+    pause
+    goto menu
+)
 timeout /t 2 >nul
 echo Reconnecting to Wi-Fi...
 netsh wlan connect name="WiFiName"
+if errorlevel 1 (
+    echo Error reconnecting to Wi-Fi.
+    pause
+    goto menu
+)
 timeout /t 2 >nul
 echo ------------------------------------------------------------
 echo Network reset complete!
@@ -85,10 +110,12 @@ set tempDir=%TEMP%
 set /a tempFilesCount=0
 set /a tempSize=0
 
+:: Counting the temp files and calculating the total size
 for /f "delims=" %%F in ('dir /a /s /b "%tempDir%" 2^>nul') do (
     set /a tempFilesCount+=1
     for %%A in ("%%F") do set /a tempSize+=%%~zA
 )
+
 set /a tempSizeMB=%tempSize% / 1048576
 
 echo ============================================================
@@ -102,6 +129,11 @@ set /p deleteTemp=Delete all temp files? (Y/N):
 if /i "%deleteTemp%"=="Y" (
     echo Deleting files...
     del /f /q "%tempDir%\*" >nul 2>&1
+    if errorlevel 1 (
+        echo Error deleting temp files.
+        pause
+        goto menu
+    )
     echo Temp files deleted.
 ) else (
     echo Operation cancelled.
@@ -123,6 +155,11 @@ if exist "%TEMP%\network-tools-updated.bat" (
     echo Update downloaded successfully.
     echo Updating current version...
     copy /y "%TEMP%\network-tools-updated.bat" "%~f0" >nul
+    if errorlevel 1 (
+        echo Error updating the script.
+        pause
+        goto menu
+    )
     echo Update applied successfully!
     timeout /t 2 >nul
     echo Restarting the script...
