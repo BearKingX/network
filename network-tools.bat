@@ -49,15 +49,6 @@ for /f "tokens=2 delims=:" %%I in ('ipconfig ^| findstr "Subnet Mask"') do set s
 echo ^| Subnet Mask    :!subnet!                                       ^|
 for /f "tokens=2 delims=:" %%I in ('ipconfig ^| findstr "DNS Servers"') do set dns=%%I
 echo ^| DNS Server     :!dns!                                          ^|
-echo ^| RAM (MB) Total : 
-for /f "tokens=2 delims==" %%A in ('wmic OS get TotalVisibleMemorySize /value') do set ram=%%A
-set /a ramMB=ram/1024
-echo ^|    Total RAM  : !ramMB! MB                                    ^|
-for /f "tokens=2 delims==" %%A in ('wmic OS get FreePhysicalMemory /value') do set freeram=%%A
-set /a freeramMB=freeram/1024
-echo ^|    Free RAM   : !freeramMB! MB                                 ^|
-echo ^| Licensing Info : 
-cscript //nologo %windir%\system32\slmgr.vbs /dli | findstr /C:"License Status" | sed "s/^/|   /"
 echo +------------------------------------------------------------------+
 pause
 goto menu
@@ -126,7 +117,9 @@ if exist "%TEMP%\network-tools-updated.bat" (
   echo Update downloaded.
   copy /y "%TEMP%\network-tools-updated.bat" "%~f0" >nul
   echo %DATE% %TIME%>last_update.txt
-  echo Update applied; restarting...
+  del "%TEMP%\network-tools-updated.bat" >nul 2>&1
+  echo Cache cleared.
+  echo Restarting...
   timeout /t 2 >nul
   start "" "%~f0"
   exit
