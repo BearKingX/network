@@ -19,11 +19,9 @@ echo ^| [1] View Computer Information                                ^|
 echo ^| [2] Reset Network                                            ^|
 echo ^| [3] Manage Temp Files (Check/Delete)                         ^|
 echo ^| [4] Check for Updates                                        ^|
-echo ^| [5] List Wi‑Fi Profiles & Passwords                          ^|
+echo ^| [5] List Wi-Fi Profiles ^& Passwords                         ^|
 echo ^| [6] Exit                                                     ^|
 echo +================================================================+
-echo(
-:: prompt at bottom-left
 <nul set /p="Select an option (1-6): "
 set /p option=
 if "%option%"=="1" goto computerInfo
@@ -70,7 +68,6 @@ echo ^|  - Flush DNS cache                                        ^|
 echo ^|  - Renew IP                                               ^|
 echo ^|  - Reconnect to Wi‑Fi                                     ^|
 echo +------------------------------------------------------------+
-echo(
 <nul set /p="Proceed (Y/N)? "
 set /p confirm=
 if /i "%confirm%"=="Y" goto performNetworkReset
@@ -107,8 +104,7 @@ echo ^| Temp Folder : %tempDir%                                      ^|
 echo ^| File Count  : %count%                                         ^|
 echo ^| Used Space  : %sizeMB% MB                                     ^|
 echo +----------------------------------------------------------------+
-echo(
-<nul set /p="Delete all temp files (Y/N)? "
+<nul set /p="Delete all temp files? (Y/N): "
 set /p del=
 if /i "%del%"=="Y" (
   del /f /s /q "%tempDir%\*" >nul 2>&1
@@ -132,17 +128,24 @@ for /f "tokens=2 delims=:" %%G in ('netsh wlan show profiles ^| findstr "All Use
   set "profile=%%G"
   set "profile=!profile:~1!"
   echo ^| !profile!
-  for /f "tokens=2 delims=:" %%H in ('netsh wlan show profile name="!profile!" key^=clear ^| findstr "Key Content"') do echo ^|    Password:%%H
+  for /f "tokens=2 delims=:" %%H in ('netsh wlan show profile name^="!profile!" key^=clear ^| findstr "Key Content"') do echo ^|    Password:%%H
 )
 echo +-------------------------------------------------------------+
 pause
 goto menu
 
-:: === CHECK FOR UPDATES (Yellow) ===
+:: === CHECK FOR UPDATES (Yellow) + CLEAR CACHE ===
 :checkUpdates
 color 0E
 cls
 echo +----------------------- CHECK FOR UPDATES -----------------------+
+echo ^| Clearing browser & DNS cache...                               ^|
+echo +----------------------------------------------------------------+
+ipconfig /flushdns >nul 2>&1
+netsh winhttp reset proxy >nul 2>&1
+certutil -urlcache * delete >nul 2>&1
+RunDll32.exe InetCpl.cpl,ClearMyTracksByProcess 255 >nul 2>&1
+
 echo ^| Fetching update from GitHub...                              ^|
 echo +----------------------------------------------------------------+
 set "updateURL=https://raw.githubusercontent.com/BearKingX/network/main/network-tools.bat"
