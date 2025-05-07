@@ -1,41 +1,70 @@
 @echo off
 setlocal EnableDelayedExpansion
-title Network Utility Tool
-color 0A
-mode con: cols=100 lines=30
 
-:: === LOADING ANIMATION ===
-:loading
-rem 8-frame spinner
-set "spinner=|/-\"
-for /l %%i in (0,1,7) do (
-    set /a idx=%%i %% 4
-    set "ch=!spinner:~!idx!,1!"
-    cls
-    echo Loading !ch!
-    timeout /t 1 >nul
-)
+:: ======== SETTINGS ========
+title Network Utility Tool
+mode con: cols=100 lines=30
+:: number of blank lines before menu to vertically center (approx)
+set vblank=8
+:: number of spaces to prefix each line to approximate horizontal center
+set spaces=                  
+
+:: ======== STARTUP LOADING ANIMATION ========
+call :startup
+goto menu
+
+:: ======== SUBROUTINES ========
+
+:startup
+cls
+:: Starting System...
+call :vblank
+echo %spaces%Starting System...
+ping -n 1 -w 750 127.0.0.1 >nul
+
+:: Gathering Information...
+cls
+call :vblank
+echo %spaces%Gathering Information...
+ping -n 1 -w 750 127.0.0.1 >nul
+
+:: Clearing Temp Files...
+cls
+call :vblank
+echo %spaces%Clearing Temp Files...
+ping -n 1 -w 750 127.0.0.1 >nul
+
+:: Almost done...
+cls
+call :vblank
+echo %spaces%Almost done...
+ping -n 1 -w 750 127.0.0.1 >nul
+
 exit /b
 
-:: === MAIN MENU ===
+:vblank
+for /L %%i in (1,1,%vblank%) do echo.
+exit /b
+
+:: ======== MAIN MENU ========
 :menu
-call :loading
 cls
 color 0A
-echo +================================================================+
-echo ^|                 NETWORK UTILITY TOOL v1.4                  ^|
-echo +================================================================+
+call :vblank
+echo %spaces%+================================================================+
+echo %spaces%^|                 NETWORK UTILITY TOOL v1.5                  ^|
+echo %spaces%+================================================================+
 if exist last_update.txt (
-  for /f "delims=" %%A in (last_update.txt) do echo Last Update: %%A
-) else echo Last Update: N/A
-echo +----------------------------------------------------------------+
-echo ^| [1] View Computer Information                                ^|
-echo ^| [2] Reset Network                                            ^|
-echo ^| [3] Manage Temp Files (Check/Delete)                         ^|
-echo ^| [4] Check for Updates                                        ^|
-echo ^| [5] Exit                                                     ^|
-echo +================================================================+
-set /p option=Select (1-5): 
+  for /f "delims=" %%A in (last_update.txt) do echo %spaces%^| Last Update: %%A
+) else echo %spaces%^| Last Update: N/A
+echo %spaces%+----------------------------------------------------------------+
+echo %spaces%^| [1] View Computer Information                                ^|
+echo %spaces%^| [2] Reset Network                                            ^|
+echo %spaces%^| [3] Manage Temp Files (Check/Delete)                         ^|
+echo %spaces%^| [4] Check for Updates                                        ^|
+echo %spaces%^| [5] Exit                                                     ^|
+echo %spaces%+================================================================+
+set /p option=Select an option (1-5): 
 if "%option%"=="1" goto computerInfo
 if "%option%"=="2" goto resetNetwork
 if "%option%"=="3" goto manageTempFiles
@@ -43,41 +72,43 @@ if "%option%"=="4" goto checkUpdates
 if "%option%"=="5" exit
 goto menu
 
-:: === COMPUTER INFORMATION ===
+:: ======== COMPUTER INFORMATION ========
 :computerInfo
 cls
-echo +----------------------- COMPUTER INFORMATION -----------------------+
-echo ^| Hostname       : %COMPUTERNAME%                                 ^|
-echo ^| Logged User    : %USERNAME%                                      ^|
-for /f "skip=1 tokens=*" %%A in ('wmic os get Caption') do if not "%%A"=="" echo ^| OS Name        : %%A & goto cpu
+call :vblank
+echo %spaces%+----------------------- COMPUTER INFORMATION -----------------------+
+echo %spaces%^| Hostname       : %COMPUTERNAME%                                 ^|
+echo %spaces%^| Logged User    : %USERNAME%                                      ^|
+for /f "skip=1 tokens=*" %%A in ('wmic os get Caption') do if not "%%A"=="" echo %spaces%^| OS Name        : %%A & goto cpu
 :cpu
-for /f "skip=1 tokens=*" %%A in ('wmic cpu get Name') do if not "%%A"=="" echo ^| CPU            : %%A & goto ip
+for /f "skip=1 tokens=*" %%A in ('wmic cpu get Name') do if not "%%A"=="" echo %spaces%^| CPU            : %%A & goto ip
 :ip
 for /f "tokens=2 delims=:" %%I in ('ipconfig ^| findstr "IPv4"') do set ip=%%I
-echo ^| IP Address     :!ip!                                           ^|
+echo %spaces%^| IP Address     :!ip!                                           ^|
 for /f "tokens=2 delims=:" %%I in ('ipconfig ^| findstr "Subnet Mask"') do set subnet=%%I
-echo ^| Subnet Mask    :!subnet!                                       ^|
+echo %spaces%^| Subnet Mask    :!subnet!                                       ^|
 for /f "tokens=2 delims=:" %%I in ('ipconfig ^| findstr "DNS Servers"') do set dns=%%I
-echo ^| DNS Server     :!dns!                                          ^|
-for /f "skip=1 tokens=*" %%A in ('wmic bios get SerialNumber') do if not "%%A"=="" echo ^| BIOS Serial No.: %%A & goto mem
+echo %spaces%^| DNS Server     :!dns!                                          ^|
+for /f "skip=1 tokens=*" %%A in ('wmic bios get SerialNumber') do if not "%%A"=="" echo %spaces%^| BIOS Serial No.: %%A & goto mem
 :mem
 for /f "tokens=2 delims==" %%A in ('wmic OS get TotalVisibleMemorySize /value') do set ram=%%A
 set /a ramMB=ram/1024
-echo ^| Total RAM      : !ramMB! MB                                   ^|
-echo +------------------------------------------------------------------+
+echo %spaces%^| Total RAM      : !ramMB! MB                                   ^|
+echo %spaces%+------------------------------------------------------------------+
 pause
 goto menu
 
-:: === NETWORK RESET ===
+:: ======== NETWORK RESET ========
 :resetNetwork
 cls
-echo +----------------------- NETWORK RESET ------------------------+
-echo ^| This will:                                               ^|
-echo ^|  - Release current IP                                     ^|
-echo ^|  - Flush DNS cache                                        ^|
-echo ^|  - Renew IP                                               ^|
-echo ^|  - Reconnect to Wi‑Fi                                     ^|
-echo +------------------------------------------------------------+
+call :vblank
+echo %spaces%+----------------------- NETWORK RESET ------------------------+
+echo %spaces%^| This will:                                               ^|
+echo %spaces%^|  - Release current IP                                     ^|
+echo %spaces%^|  - Flush DNS cache                                        ^|
+echo %spaces%^|  - Renew IP                                               ^|
+echo %spaces%^|  - Reconnect to Wi‑Fi                                     ^|
+echo %spaces%+------------------------------------------------------------+
 set /p confirm=Proceed (Y/N)? 
 if /i "%confirm%"=="Y" goto performNetworkReset
 goto menu
@@ -98,9 +129,10 @@ echo Network reset complete!
 pause
 goto menu
 
-:: === TEMP FILE CLEANER ===
+:: ======== TEMP FILE CLEANER ========
 :manageTempFiles
 cls
+call :vblank
 set "tempDir=%TEMP%"
 set /a count=0, size=0
 for /r "%tempDir%" %%F in (*) do (
@@ -108,11 +140,11 @@ for /r "%tempDir%" %%F in (*) do (
   set /a size+=%%~zF
 )
 set /a sizeMB=size/1048576
-echo +----------------------- TEMP FILE CLEANER -----------------------+
-echo ^| Temp Folder : %tempDir%                                      ^|
-echo ^| File Count  : %count%                                         ^|
-echo ^| Used Space  : %sizeMB% MB                                     ^|
-echo +----------------------------------------------------------------+
+echo %spaces%+----------------------- TEMP FILE CLEANER -----------------------+
+echo %spaces%^| Temp Folder : %tempDir%                                      ^|
+echo %spaces%^| File Count  : %count%                                         ^|
+echo %spaces%^| Used Space  : %sizeMB% MB                                     ^|
+echo %spaces%+----------------------------------------------------------------+
 set /p del=Delete all temp files? (Y/N): 
 if /i "%del%"=="Y" (
   echo Deleting files...
@@ -129,13 +161,14 @@ if /i "%del%"=="Y" (
 pause
 goto menu
 
-:: === CHECK FOR UPDATES (Yellow) ===
+:: ======== CHECK FOR UPDATES (Yellow) ========
 :checkUpdates
 color 0E
 cls
-echo +----------------------- CHECK FOR UPDATES -----------------------+
-echo ^| Fetching update from GitHub...                              ^|
-echo +----------------------------------------------------------------+
+call :vblank
+echo %spaces%+----------------------- CHECK FOR UPDATES -----------------------+
+echo %spaces%^| Fetching update from GitHub...                              ^|
+echo %spaces%+----------------------------------------------------------------+
 set "updateURL=https://raw.githubusercontent.com/BearKingX/network/main/network-tools.bat"
 set "tempScript=%TEMP%\network-tools-updated.bat"
 curl -s -o "%tempScript%" "%updateURL%"
