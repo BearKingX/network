@@ -50,19 +50,19 @@ goto menu
 :computerInfo
 cls
 echo +----------------------- COMPUTER INFORMATION -----------------------+
-echo ^| Hostname       : %COMPUTERNAME%                                 ^|
-echo ^| Logged User    : %USERNAME%                                      ^|
-for /f "skip=1 tokens=*" %%A in ('wmic os get Caption') do if not "%%A"=="" echo ^| OS Name        : %%A & goto cpu
+echo  Hostname       : %COMPUTERNAME%                                 
+echo  Logged User    : %USERNAME%                                      
+for /f "skip=1 tokens=*" %%A in ('wmic os get Caption') do if not "%%A"=="" echo  OS Name        : %%A & goto cpu
 :cpu
-for /f "skip=1 tokens=*" %%A in ('wmic cpu get Name') do if not "%%A"=="" echo ^| CPU            : %%A & goto ip
+for /f "skip=1 tokens=*" %%A in ('wmic cpu get Name') do if not "%%A"=="" echo  CPU            : %%A & goto ip
 :ip
 for /f "tokens=2 delims=:" %%I in ('ipconfig ^| findstr "IPv4"') do set ip=%%I
-echo ^| IP Address     :!ip!                                           ^|
+echo  IP Address     :!ip!                                           
 for /f "tokens=2 delims=:" %%I in ('ipconfig ^| findstr "Subnet Mask"') do set subnet=%%I
-echo ^| Subnet Mask    :!subnet!                                       ^|
+echo  Subnet Mask    :!subnet!                                       
 for /f "tokens=2 delims=:" %%I in ('ipconfig ^| findstr "DNS Servers"') do set dns=%%I
-echo ^| DNS Server     :!dns!                                          ^|
-for /f "skip=1 tokens=*" %%A in ('wmic bios get SerialNumber') do if not "%%A"=="" echo ^| BIOS Serial No.: %%A & goto mem
+echo  DNS Server     :!dns!                                          
+for /f "skip=1 tokens=*" %%A in ('wmic bios get SerialNumber') do if not "%%A"=="" echo  BIOS Serial No.: %%A & goto mem
 :mem
 for /f "tokens=2 delims==" %%A in ('wmic OS get TotalVisibleMemorySize /value') do set ram=%%A
 set /a ramMB=ram/1024
