@@ -66,7 +66,7 @@ for /f "skip=1 tokens=*" %%A in ('wmic bios get SerialNumber') do if not "%%A"==
 :mem
 for /f "tokens=2 delims==" %%A in ('wmic OS get TotalVisibleMemorySize /value') do set ram=%%A
 set /a ramMB=ram/1024
-echo ^| Total RAM      : !ramMB! MB                                   ^|
+echo  Total RAM      : !ramMB! MB                                   ^|
 echo +------------------------------------------------------------------+
 pause
 goto menu
