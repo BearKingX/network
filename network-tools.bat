@@ -9,7 +9,7 @@ mode con: cols=100 lines=30
 cls
 color 0A
 echo +================================================================+
-echo ^|                     NETWORK UTILITY TOOLS                    ^|
+echo ^|                 NETWORK UTILITY TOOL (CMD)                  ^|
 echo +================================================================+
 echo ^| [1] View Computer Information                                ^|
 echo ^| [2] Reset Network                                            ^|
@@ -37,18 +37,19 @@ echo ^| Hostname       : %COMPUTERNAME%                                 ^|
 echo ^| Logged User    : %USERNAME%                                      ^|
 for /f "skip=1 tokens=*" %%A in ('wmic os get Caption') do if not "%%A"=="" echo ^| OS Name        : %%A & goto cpu
 :cpu
-for /f "skip=1 tokens=*" %%A in ('wmic cpu get Name') do if not "%%A"=="" echo ^| CPU            : %%A & goto arch
-:arch
-echo ^| Architecture   : %PROCESSOR_ARCHITECTURE%                        ^|
-for /f "skip=1 tokens=*" %%A in ('wmic bios get SerialNumber') do if not "%%A"=="" echo ^| BIOS Serial No.: %%A & goto mac
-:mac
-for /f "tokens=2 delims==" %%A in ('wmic nic where "NetEnabled=true" get MACAddress /value') do echo ^| MAC Address    : %%A
+for /f "skip=1 tokens=*" %%A in ('wmic cpu get Name') do if not "%%A"=="" echo ^| CPU            : %%A & goto ip
+:ip
 for /f "tokens=2 delims=:" %%I in ('ipconfig ^| findstr "IPv4"') do set ip=%%I
 echo ^| IP Address     :!ip!                                           ^|
 for /f "tokens=2 delims=:" %%I in ('ipconfig ^| findstr "Subnet Mask"') do set subnet=%%I
 echo ^| Subnet Mask    :!subnet!                                       ^|
 for /f "tokens=2 delims=:" %%I in ('ipconfig ^| findstr "DNS Servers"') do set dns=%%I
 echo ^| DNS Server     :!dns!                                          ^|
+for /f "skip=1 tokens=*" %%A in ('wmic bios get SerialNumber') do if not "%%A"=="" echo ^| BIOS Serial No.: %%A & goto mem
+:mem
+for /f "tokens=2 delims==" %%A in ('wmic OS get TotalVisibleMemorySize /value') do set ram=%%A
+set /a ramMB=ram/1024
+echo ^| Total RAM      : !ramMB! MB                                   ^|
 echo +------------------------------------------------------------------+
 pause
 goto menu
@@ -86,22 +87,32 @@ goto menu
 :: === TEMP FILE CLEANER ===
 :manageTempFiles
 cls
-set tempDir=%TEMP%
+set "tempDir=%TEMP%"
 set /a count=0, size=0
-for /f "delims=" %%F in ('dir /a /s /b "%tempDir%" 2^>nul') do (
+for /r "%tempDir%" %%F in (*) do (
   set /a count+=1
-  for %%A in ("%%F") do set /a size+=%%~zA
+  set "fsize=%%~zF"
+  set /a size+=fsize
 )
 set /a sizeMB=size/1048576
 echo +----------------------- TEMP FILE CLEANER -----------------------+
 echo ^| Temp Folder : %tempDir%                                   ^|
 echo ^| File Count  : %count%                                      ^|
 echo ^| Used Space  : %sizeMB% MB                                  ^|
-echo +---------------------------------------------------------------+
+echo +----------------------------------------------------------------+
 set /p del=Delete all temp files (Y/N)? 
 if /i "%del%"=="Y" (
-  del /f /s /q "%tempDir%\*" >nul 2>&1 && echo Files deleted. || echo Error deleting files.
-) else echo Operation cancelled.
+  echo Deleting files...
+  del /f /s /q "%tempDir%\*" >nul 2>&1
+  for /d %%D in ("%tempDir%\*") do rd /s /q "%%D" >nul 2>&1
+  if errorlevel 1 (
+    echo Error deleting some files/folders.
+  ) else (
+    echo All temp files and folders deleted.
+  )
+) else (
+  echo Operation cancelled.
+)
 pause
 goto menu
 
@@ -111,7 +122,7 @@ color 0E
 cls
 echo +----------------------- CHECK FOR UPDATES -----------------------+
 echo ^| Fetching update from GitHub...                              ^|
-echo +---------------------------------------------------------------+
+echo +----------------------------------------------------------------+
 curl -s -o "%TEMP%\network-tools-updated.bat" "https://raw.githubusercontent.com/BearKingX/network/main/network-tools.bat"
 if exist "%TEMP%\network-tools-updated.bat" (
   echo Update downloaded.
