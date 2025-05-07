@@ -5,7 +5,7 @@ mode con: cols=100 lines=30
 
 :menu
 cls
-echo ===================== Network Utility Tool =====================
+echo ===================== Network Utility Tools =====================
 echo [1] View Computer Info
 echo [2] Reset Network
 echo [3] Manage Temp Files
