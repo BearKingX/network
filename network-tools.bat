@@ -1,5 +1,5 @@
 @echo off
-title Network Utility Tool - Hashim
+title Network Utility Tool
 color 0A
 mode con: cols=100 lines=30
 
@@ -7,7 +7,7 @@ mode con: cols=100 lines=30
 :menu
 cls
 echo ============================================================
-echo            Network Utility - Hashim Tools
+echo            Network Utility 
 echo ============================================================
 echo [1] View Computer Information
 echo [2] Reset Network
