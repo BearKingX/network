@@ -1,13 +1,10 @@
 @echo off
 setlocal EnableDelayedExpansion
-title Network Utility Tool
-color 0A
-mode con: cols=100 lines=30
 
-::─────────────────────────────────────────────────────────────────────────────
-::  Subroutine: padAndEcho  — pads text to fixed width and wraps in “| … |”
-::  Uses WIDTH and PAD defined in :init
-::─────────────────────────────────────────────────────────────────────────────
+:: ── STARTUP JUMP ─────────────────────────────────────────────────────────────
+goto init
+
+:: ── HELPER: padAndEcho (pads/truncates to WIDTH, wraps in “| … |”) ─────────────
 :padAndEcho
 set "line=%~1"
 set "line=%line%%PAD%"
@@ -15,16 +12,14 @@ set "line=%line:~0,%WIDTH%%"
 echo ^| %line% ^|
 exit /b
 
-::─────────────────────────────────────────────────────────────────────────────
-::  Initialize & Automatic Update‑Status Check
-::─────────────────────────────────────────────────────────────────────────────
+:: ── INITIALIZATION & AUTO‑UPDATE CHECK ────────────────────────────────────────
 :init
 :: table inner width
 set "WIDTH=66"
-:: long pad string
+:: padding string (at least WIDTH spaces)
 set "PAD=                                                                  "
 
-:: auto‑check update status
+:: check for updates quietly
 set "updateURL=https://raw.githubusercontent.com/BearKingX/network/main/network-tools.bat"
 set "tempScript=%TEMP%\network-tools-updated.bat"
 set "status=Unable to check updates"
@@ -35,11 +30,7 @@ if exist "%tempScript%" (
   del "%tempScript%" >nul 2>&1
 )
 
-goto menu
-
-::─────────────────────────────────────────────────────────────────────────────
-::  MAIN MENU
-::─────────────────────────────────────────────────────────────────────────────
+:: ── MAIN MENU ─────────────────────────────────────────────────────────────────
 :menu
 cls
 color 0A
@@ -48,21 +39,22 @@ call :padAndEcho "NETWORK UTILITY TOOL v1.7"
 echo +%PAD:~0,%WIDTH%+
 call :padAndEcho "Status: !status!"
 echo +%PAD:~0,%WIDTH%+
-call :padAndEcho "[1] View Computer Information"
-call :padAndEcho "[2] Reset Network"
-call :padAndEcho "[3] Manage Temp Files (Check/Delete)"
-call :padAndEcho "[4] Ping Test"
-call :padAndEcho "[5] Active Network Connections"
-call :padAndEcho "[6] View Environment Variables"
-call :padAndEcho "[7] View Running Processes"
-call :padAndEcho "[8] List Wi-Fi Profiles & Passwords"
-call :padAndEcho "[9] Check for Updates"
-call :padAndEcho "[10] Exit"
+for %%i in (1 2 3 4 5 6 7 8 9 10) do (
+  if %%i==1 call :padAndEcho "[1] View Computer Information"
+  if %%i==2 call :padAndEcho "[2] Reset Network"
+  if %%i==3 call :padAndEcho "[3] Manage Temp Files (Check/Delete)"
+  if %%i==4 call :padAndEcho "[4] Ping Test"
+  if %%i==5 call :padAndEcho "[5] Active Network Connections"
+  if %%i==6 call :padAndEcho "[6] View Environment Variables"
+  if %%i==7 call :padAndEcho "[7] View Running Processes"
+  if %%i==8 call :padAndEcho "[8] List Wi-Fi Profiles & Passwords"
+  if %%i==9 call :padAndEcho "[9] Check for Updates"
+  if %%i==10 call :padAndEcho "[10] Exit"
+)
 echo +%PAD:~0,%WIDTH%+
 echo(
 <nul set /p="Select an option (1-10): "
 set /p option=
-if not "%option%"=="%option:~0,2%" set option=0
 if "%option%"=="1" goto computerInfo
 if "%option%"=="2" goto resetNetwork
 if "%option%"=="3" goto manageTempFiles
@@ -77,9 +69,7 @@ call :padAndEcho "Invalid choice, please select 1–10."
 timeout /t 1 >nul
 goto menu
 
-::─────────────────────────────────────────────────────────────────────────────
-::  1) COMPUTER INFORMATION
-::─────────────────────────────────────────────────────────────────────────────
+:: ── 1) COMPUTER INFORMATION ─────────────────────────────────────────────────
 :computerInfo
 cls
 echo +%PAD:~0,%WIDTH%+
@@ -87,10 +77,10 @@ call :padAndEcho "COMPUTER INFORMATION"
 echo +%PAD:~0,%WIDTH%+
 call :padAndEcho "Hostname       : %COMPUTERNAME%"
 call :padAndEcho "Logged User    : %USERNAME%"
-for /f "skip=1 tokens=*" %%A in ('wmic os get Caption') do if not "%%A"=="" (set "os=%%A" & goto showOS)
+for /f "skip=1 tokens=*" %%A in ('wmic os get Caption') do if not "%%A"=="" set "os=%%A" & goto showOS
 :showOS
 call :padAndEcho "OS Name        : !os!"
-for /f "skip=1 tokens=*" %%A in ('wmic cpu get Name') do if not "%%A"=="" (set "cpu=%%A" & goto showCPU)
+for /f "skip=1 tokens=*" %%A in ('wmic cpu get Name') do if not "%%A"=="" set "cpu=%%A" & goto showCPU
 :showCPU
 call :padAndEcho "CPU            : !cpu!"
 for /f "tokens=2 delims=:" %%I in ('ipconfig ^| findstr "IPv4"') do set ip=%%I
@@ -99,7 +89,7 @@ for /f "tokens=2 delims=:" %%I in ('ipconfig ^| findstr "Subnet Mask"') do set s
 call :padAndEcho "Subnet Mask    :!subnet!"
 for /f "tokens=2 delims=:" %%I in ('ipconfig ^| findstr "DNS Servers"') do set dns=%%I
 call :padAndEcho "DNS Server     :!dns!"
-for /f "skip=1 tokens=*" %%A in ('wmic bios get SerialNumber') do if not "%%A"=="" (set "sn=%%A" & goto showSN)
+for /f "skip=1 tokens=*" %%A in ('wmic bios get SerialNumber') do if not "%%A"=="" set "sn=%%A" & goto showSN
 :showSN
 call :padAndEcho "BIOS Serial No.: !sn!"
 for /f "tokens=2 delims==" %%A in ('wmic path SoftwareLicensingService get OA3xOriginalProductKey /value') do set pk=%%A
@@ -111,9 +101,7 @@ echo +%PAD:~0,%WIDTH%+
 pause
 goto menu
 
-::─────────────────────────────────────────────────────────────────────────────
-::  2) RESET NETWORK
-::─────────────────────────────────────────────────────────────────────────────
+:: ── 2) RESET NETWORK ─────────────────────────────────────────────────────────
 :resetNetwork
 cls
 echo +%PAD:~0,%WIDTH%+
@@ -139,9 +127,7 @@ if /i "%confirm%"=="Y" (
 pause
 goto menu
 
-::─────────────────────────────────────────────────────────────────────────────
-::  3) MANAGE TEMP FILES
-::─────────────────────────────────────────────────────────────────────────────
+:: ── 3) MANAGE TEMP FILES ────────────────────────────────────────────────────
 :manageTempFiles
 cls
 echo +%PAD:~0,%WIDTH%+
@@ -169,9 +155,7 @@ if /i "%del%"=="Y" (
 pause
 goto menu
 
-::─────────────────────────────────────────────────────────────────────────────
-::  4) PING TEST
-::─────────────────────────────────────────────────────────────────────────────
+:: ── 4) PING TEST ────────────────────────────────────────────────────────────
 :pingTest
 cls
 echo +%PAD:~0,%WIDTH%+
@@ -184,9 +168,7 @@ ping %host% -n 4
 pause
 goto menu
 
-::─────────────────────────────────────────────────────────────────────────────
-::  5) ACTIVE NETWORK CONNECTIONS
-::─────────────────────────────────────────────────────────────────────────────
+:: ── 5) ACTIVE NETWORK CONNECTIONS ─────────────────────────────────────────
 :netConnections
 cls
 echo +%PAD:~0,%WIDTH%+
@@ -196,9 +178,7 @@ netstat -an
 pause
 goto menu
 
-::─────────────────────────────────────────────────────────────────────────────
-::  6) VIEW ENVIRONMENT VARIABLES
-::─────────────────────────────────────────────────────────────────────────────
+:: ── 6) VIEW ENVIRONMENT VARIABLES ─────────────────────────────────────────
 :viewEnv
 cls
 echo +%PAD:~0,%WIDTH%+
@@ -208,9 +188,7 @@ set
 pause
 goto menu
 
-::─────────────────────────────────────────────────────────────────────────────
-::  7) VIEW RUNNING PROCESSES
-::─────────────────────────────────────────────────────────────────────────────
+:: ── 7) VIEW RUNNING PROCESSES ─────────────────────────────────────────────
 :viewProcs
 cls
 echo +%PAD:~0,%WIDTH%+
@@ -220,9 +198,7 @@ tasklist
 pause
 goto menu
 
-::─────────────────────────────────────────────────────────────────────────────
-::  8) LIST WIFI PROFILES & PASSWORDS
-::─────────────────────────────────────────────────────────────────────────────
+:: ── 8) LIST WIFI PROFILES & PASSWORDS ─────────────────────────────────────
 :wifiList
 cls
 echo +%PAD:~0,%WIDTH%+
@@ -254,9 +230,7 @@ echo +%PAD:~0,%WIDTH%+
 pause
 goto menu
 
-::─────────────────────────────────────────────────────────────────────────────
-::  9) MANUAL UPDATE (CLEAR CACHE & RESTART)
-::─────────────────────────────────────────────────────────────────────────────
+:: ── 9) MANUAL UPDATE (CLEAR CACHE & RESTART) ─────────────────────────────────
 :manualUpdate
 color 0E
 cls
