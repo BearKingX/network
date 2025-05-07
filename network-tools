@@ -1,115 +1,128 @@
 @echo off
-title Network Utility Tool - Created by Hashim
+title Network Utility Tool - Hashim
 color 0A
 mode con: cols=100 lines=30
-setlocal ENABLEEXTENSIONS ENABLEDELAYEDEXPANSION
 
+:: Set up variables
 set "wifiName=YourWiFiName"
+set "updateURL=https://raw.githubusercontent.com/YourGitHubUsername/YourRepoName/main/network-tools.bat"
+set "scriptName=%~f0"
+set "newScript=%TEMP%\network-tools.new"
 
+:: Function to show the menu
 :menu
 cls
-echo ==========================================================
-echo             Network Utility - Hashim Tools
-echo ==========================================================
+echo ============================================================
+echo            Network Utility - Hashim Tools
+echo ============================================================
 echo [1] View Computer Information
 echo [2] Reset Network
 echo [3] Manage Temp Files (Check/Delete)
 echo [4] Exit
-echo ----------------------------------------------------------
-set /p option=Select an option (1-4): 
+echo [5] Check for Updates
+echo -----------------------------------------------------------
+set /p option=Select an option (1-5): 
 
-if "%option%"=="1" goto info
-if "%option%"=="2" goto confirm
-if "%option%"=="3" goto temp
+if "%option%"=="1" goto computerInfo
+if "%option%"=="2" goto resetNetwork
+if "%option%"=="3" goto manageTempFiles
 if "%option%"=="4" exit
+if "%option%"=="5" goto checkUpdates
+
 goto menu
 
-:confirm
+:: Function to display computer information
+:computerInfo
 cls
-echo ==========================================================
-echo             Network Reset Confirmation
-echo ==========================================================
+echo ============================================================
+echo            Computer Information Overview
+echo ============================================================
+echo Hostname     : %COMPUTERNAME%
+echo Logged User  : %USERNAME%
+echo OS Version   : %OS%
+for /f "tokens=2 delims=:" %%I in ('ipconfig ^| findstr "IPv4"') do set ip=%%I
+echo IP Address   : %ip%
+for /f "tokens=2 delims=:" %%I in ('ipconfig ^| findstr "Subnet"') do set subnet=%%I
+echo Subnet Mask  : %subnet%
+for /f "tokens=2 delims=:" %%I in ('ipconfig ^| findstr "DNS"') do set dns=%%I
+echo DNS Servers  : %dns%
+echo -----------------------------------------------------------
+pause
+goto menu
+
+:: Function to reset the network
+:resetNetwork
+cls
+echo ============================================================
+echo            Network Reset Confirmation
+echo ============================================================
 echo This tool will:
 echo - Release current IP
 echo - Flush DNS cache
 echo - Renew IP
-echo - Reconnect to Wi-Fi: %wifiName%
-echo.
+echo - Reconnect to Wi-Fi
 set /p confirm=Proceed with reset? (Y/N): 
-if /i "%confirm%"=="Y" goto process
-if /i "%confirm%"=="N" goto menu
-goto confirm
 
-:process
+if /i "%confirm%"=="Y" goto performNetworkReset
+goto menu
+
+:: Perform network reset operations
+:performNetworkReset
 cls
 echo Releasing IP Address...
-ipconfig /release >nul
-timeout /t 2 >nul
+ipconfig /release
+timeout /t 2
 
 echo Flushing DNS Cache...
-ipconfig /flushdns >nul
-timeout /t 2 >nul
+ipconfig /flushdns
+timeout /t 2
 
 echo Renewing IP Address...
-ipconfig /renew >nul
-timeout /t 2 >nul
+ipconfig /renew
+timeout /t 2
 
 echo Disconnecting Wi-Fi...
-netsh wlan disconnect >nul
-timeout /t 2 >nul
+netsh wlan disconnect
+timeout /t 2
 
 echo Reconnecting to Wi-Fi...
-netsh wlan connect name="%wifiName%" >nul
-timeout /t 2 >nul
+netsh wlan connect name="WiFiName"
+timeout /t 2
 
-echo.
+echo -----------------------------------------------------------
 echo Network reset completed successfully!
 pause
 goto menu
 
-:info
+:: Function to manage temporary files
+:manageTempFiles
 cls
-echo ==========================================================
-echo             Computer Information Overview
-echo ==========================================================
-echo Hostname     : %COMPUTERNAME%
-echo Logged User  : %USERNAME%
-echo OS Version   : %OS%
-for /f "tokens=2 delims=:" %%A in ('ipconfig ^| findstr /c:"IPv4 Address"') do echo IP Address   : %%A
-for /f "tokens=2 delims=:" %%A in ('ipconfig ^| findstr /c:"Subnet Mask"') do echo Subnet Mask  : %%A
-for /f "tokens=2 delims=:" %%A in ('ipconfig /all ^| findstr /c:"DNS Servers"') do echo DNS Server   : %%A
-echo ----------------------------------------------------------
-pause
-goto menu
+set tempDir=%TEMP%
+set tempFilesCount=0
+set tempSize=0
 
-:temp
-cls
-echo ==========================================================
-echo               Temp File Cleaner
-echo ==========================================================
-set "tempdir=%TEMP%"
-set /a count=0
-set /a size=0
-
-:: Count files and accumulate size in bytes
-for /r "%tempdir%" %%F in (*) do (
-    set /a count+=1
-    set /a size+=%%~zF
+for /r "%tempDir%" %%A in (*) do (
+    set /a tempFilesCount+=1
+    set /a tempSize+=%%~zA
 )
 
-:: Calculate MB (rounded)
-set /a sizeMB=size/1024/1024
+set /a tempSizeMB=%tempSize%/1048576
+echo ============================================================
+echo            Temp File Cleaner
+echo ============================================================
+echo Temp folder path: %tempDir%
+echo Total temp files: %tempFilesCount%
+echo Total size used : %tempSizeMB% MB
+echo -----------------------------------------------------------
+set /p deleteTemp=Do you want to delete all temp files? (Y/N): 
 
-echo Temp folder path: %tempdir%
-echo Total temp files: %count%
-echo Total size used : %sizeMB% MB
-echo ----------------------------------------------------------
-set /p del=Do you want to delete all temp files? (Y/N): 
-if /i "%del%"=="Y" (
-    del /f /s /q "%tempdir%\*" >nul 2>&1
-    echo All temporary files deleted.
+if /i "%deleteTemp%"=="Y" (
+    echo Deleting all temp files...
+    del /f /q "%tempDir%\*"
+    echo Temp files deleted.
 ) else (
     echo Temp files not deleted.
 )
+
 pause
 goto menu
