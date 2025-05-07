@@ -31,15 +31,24 @@ cls
 echo ============================================================
 echo            Computer Information Overview
 echo ============================================================
-echo Hostname     : %COMPUTERNAME%
-echo Logged User  : %USERNAME%
-echo OS Version   : %OS%
+echo Hostname          : %COMPUTERNAME%
+echo Logged User       : %USERNAME%
+echo OS Version        : %OS%
+echo Architecture      : %PROCESSOR_ARCHITECTURE%
+echo Processor         : %PROCESSOR_IDENTIFIER%
 for /f "tokens=2 delims=:" %%I in ('ipconfig ^| findstr "IPv4"') do set ip=%%I
-echo IP Address   : %ip%
+echo IP Address        : %ip%
 for /f "tokens=2 delims=:" %%I in ('ipconfig ^| findstr "Subnet"') do set subnet=%%I
-echo Subnet Mask  : %subnet%
+echo Subnet Mask       : %subnet%
 for /f "tokens=2 delims=:" %%I in ('ipconfig ^| findstr "DNS"') do set dns=%%I
-echo DNS Servers  : %dns%
+echo DNS Servers       : %dns%
+echo -----------------------------------------------------------
+echo Memory (Total): 
+wmic OS get TotalVisibleMemorySize /Value
+echo Free Memory (Available): 
+wmic OS get FreePhysicalMemory /Value
+echo Disk Space (C:) :
+wmic logicaldisk where "DeviceID='C:'" get FreeSpace, Size
 echo -----------------------------------------------------------
 pause
 goto menu
