@@ -1,5 +1,5 @@
 @echo off
-title Network Utility Tool - Hashim
+title Network Utility Tool 
 color 0A
 mode con: cols=100 lines=30
 
