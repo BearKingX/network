@@ -5,7 +5,7 @@ mode con: cols=100 lines=30
 
 :menu
 cls
-echo ===================== Network Utility Tools =====================
+echo ===================== Network Utility Tool =====================
 echo [1] View Computer Info
 echo [2] Reset Network
 echo [3] Manage Temp Files
@@ -32,6 +32,8 @@ for /f "skip=1 delims=" %%a in ('wmic cpu get Name') do if not "%%a"=="" echo CP
 :ip
 for /f "tokens=2 delims=:" %%i in ('ipconfig ^| findstr "IPv4"') do set ip=%%i
 echo IP Address     :%ip%
+for /f "tokens=2 delims=:" %%i in ('ipconfig ^| findstr "DNS Servers"') do set dns=%%i
+echo DNS Server     :%dns%
 echo ----------------------------------------------------------------
 echo RAM (MB):
 for /f "tokens=2 delims==" %%a in ('wmic OS get TotalVisibleMemorySize /value') do set ram=%%a
