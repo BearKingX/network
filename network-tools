@@ -35,7 +35,7 @@ if exist "%tempScript%" (
 :menu
 cls
 echo ============================================================
-echo            Network Utility - Hashim Tools
+echo            Network Utility 
 echo ============================================================
 echo [1] View Computer Information
 echo [2] Reset Network
