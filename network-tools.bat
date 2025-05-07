@@ -128,7 +128,7 @@ echo ============================================================
 echo Checking for updates from GitHub...
 echo ============================================================
 echo This may take a few seconds.
-curl -s -o "%TEMP%\network-tools-updated.bat" "https://raw.githubusercontent.com/BearKingX/network/refs/heads/main/network-tools.bat"
+curl -s -o "%TEMP%\network-tools-updated.bat" "https://raw.githubusercontent.com/BearKingX/network/main/network-tools.bat"
 
 :: Check if the update file was downloaded
 if exist "%TEMP%\network-tools-updated.bat" (
