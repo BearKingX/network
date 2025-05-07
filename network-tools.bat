@@ -1,6 +1,6 @@
 @echo off
 title Network Utility Tool
-color 0E
+color 0A
 mode con: cols=100 lines=30
 
 :: Main Menu
@@ -33,48 +33,23 @@ if "%option%"=="9" goto checkUpdates
 if "%option%"=="10" exit
 goto menu
 
-:: Display Computer Information
+:: Display Computer Information (Shortened)
 :computerInfo
 cls
 echo ============================================================
 echo              Computer Information Overview
 echo ============================================================
 echo Hostname         : %COMPUTERNAME%
-echo Logged User      : %USERNAME%
 echo OS Version       : %OS%
-echo Architecture     : %PROCESSOR_ARCHITECTURE%
-
-echo OS Name:
-for /f "delims=" %%a in ('wmic os get Caption ^| findstr /v "Caption"') do echo   %%a
-
-echo Processor:
-for /f "delims=" %%a in ('wmic cpu get Name ^| findstr /v "Name"') do echo   %%a
-
-echo Cores / Threads:
-wmic cpu get NumberOfCores,NumberOfLogicalProcessors /value
-
-echo Baseboard Info:
-wmic baseboard get Manufacturer,Product,SerialNumber /value
-
-echo BIOS Version:
-wmic bios get SMBIOSBIOSVersion /value
+echo Processor        : %PROCESSOR_IDENTIFIER%
 
 for /f "tokens=2 delims=:" %%I in ('ipconfig ^| findstr "IPv4"') do set ip=%%I
 for /f "tokens=2 delims=:" %%I in ('ipconfig ^| findstr "Subnet"') do set subnet=%%I
-for /f "tokens=2 delims=:" %%I in ('ipconfig ^| findstr "DNS"') do set dns=%%I
 echo IP Address       :%ip%
 echo Subnet Mask      :%subnet%
-echo DNS Servers      :%dns%
 
 echo Memory Info:
 wmic OS get TotalVisibleMemorySize,FreePhysicalMemory /value
-
-echo Virtual Memory:
-wmic pagefile get AllocatedBaseSize,CurrentUsage /value
-
-echo Disk (C:) Usage:
-wmic logicaldisk where "DeviceID='C:'" get Size,FreeSpace /value
-
 echo ------------------------------------------------------------
 pause
 goto menu
