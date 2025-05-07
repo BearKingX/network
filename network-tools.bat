@@ -9,7 +9,7 @@ mode con: cols=100 lines=30
 cls
 color 0A
 echo +================================================================+
-echo ^|                 NETWORK UTILITY TOOL v1.5                  ^|
+echo ^|                 NETWORK UTILITY TOOL v1.6                  ^|
 echo +================================================================+
 if exist last_update.txt (
   for /f "delims=" %%A in (last_update.txt) do echo Last Update: %%A
@@ -19,14 +19,19 @@ echo ^| [1] View Computer Information                                ^|
 echo ^| [2] Reset Network                                            ^|
 echo ^| [3] Manage Temp Files (Check/Delete)                         ^|
 echo ^| [4] Check for Updates                                        ^|
-echo ^| [5] Exit                                                     ^|
+echo ^| [5] List Wi‑Fi Profiles & Passwords                          ^|
+echo ^| [6] Exit                                                     ^|
 echo +================================================================+
-set /p option=Select an option (1-5): 
+echo(
+:: prompt at bottom-left
+<nul set /p="Select an option (1-6): "
+set /p option=
 if "%option%"=="1" goto computerInfo
 if "%option%"=="2" goto resetNetwork
 if "%option%"=="3" goto manageTempFiles
 if "%option%"=="4" goto checkUpdates
-if "%option%"=="5" exit
+if "%option%"=="5" goto wifiList
+if "%option%"=="6" exit
 goto menu
 
 :: === COMPUTER INFORMATION ===
@@ -45,8 +50,9 @@ for /f "tokens=2 delims=:" %%I in ('ipconfig ^| findstr "Subnet Mask"') do set s
 echo ^| Subnet Mask    :!subnet!                                       ^|
 for /f "tokens=2 delims=:" %%I in ('ipconfig ^| findstr "DNS Servers"') do set dns=%%I
 echo ^| DNS Server     :!dns!                                          ^|
-for /f "skip=1 tokens=*" %%A in ('wmic bios get SerialNumber') do if not "%%A"=="" echo ^| BIOS Serial No.: %%A & goto mem
-:mem
+for /f "skip=1 tokens=*" %%A in ('wmic bios get SerialNumber') do if not "%%A"=="" echo ^| BIOS Serial No.: %%A & goto key
+:key
+for /f "tokens=2 delims==" %%A in ('wmic path SoftwareLicensingService get OA3xOriginalProductKey /value') do echo ^| Product Key    : %%A
 for /f "tokens=2 delims==" %%A in ('wmic OS get TotalVisibleMemorySize /value') do set ram=%%A
 set /a ramMB=ram/1024
 echo ^| Total RAM      : !ramMB! MB                                   ^|
@@ -64,7 +70,9 @@ echo ^|  - Flush DNS cache                                        ^|
 echo ^|  - Renew IP                                               ^|
 echo ^|  - Reconnect to Wi‑Fi                                     ^|
 echo +------------------------------------------------------------+
-set /p confirm=Proceed (Y/N)? 
+echo(
+<nul set /p="Proceed (Y/N)? "
+set /p confirm=
 if /i "%confirm%"=="Y" goto performNetworkReset
 goto menu
 
@@ -99,7 +107,9 @@ echo ^| Temp Folder : %tempDir%                                      ^|
 echo ^| File Count  : %count%                                         ^|
 echo ^| Used Space  : %sizeMB% MB                                     ^|
 echo +----------------------------------------------------------------+
-set /p del=Delete all temp files? (Y/N): 
+echo(
+<nul set /p="Delete all temp files (Y/N)? "
+set /p del=
 if /i "%del%"=="Y" (
   del /f /s /q "%tempDir%\*" >nul 2>&1
   for /d %%D in ("%tempDir%\*") do rd /s /q "%%D" >nul 2>&1
@@ -111,6 +121,20 @@ if /i "%del%"=="Y" (
 ) else (
   echo Operation cancelled.
 )
+pause
+goto menu
+
+:: === LIST WIFI PROFILES & PASSWORDS ===
+:wifiList
+cls
+echo +----------------------- WIFI PROFILES ------------------------+
+for /f "tokens=2 delims=:" %%G in ('netsh wlan show profiles ^| findstr "All User Profile"') do (
+  set "profile=%%G"
+  set "profile=!profile:~1!"
+  echo ^| !profile!
+  for /f "tokens=2 delims=:" %%H in ('netsh wlan show profile name="!profile!" key^=clear ^| findstr "Key Content"') do echo ^|    Password:%%H
+)
+echo +-------------------------------------------------------------+
 pause
 goto menu
 
