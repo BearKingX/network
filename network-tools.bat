@@ -151,6 +151,16 @@ echo ============================================================
 echo Fetching update from GitHub...
 curl -s -o "%TEMP%\network-tools-updated.bat" "https://raw.githubusercontent.com/BearKingX/network/main/network-tools.bat"
 
+:: Display the last update time if the file exists
+if exist "last_update.txt" (
+    for /f "delims=" %%A in (last_update.txt) do set lastUpdate=%%A
+    echo Last Update: %lastUpdate%
+) else (
+    echo Last Update: Not available
+)
+
+echo -----------------------------------------------------------
+echo Update Process:
 if exist "%TEMP%\network-tools-updated.bat" (
     echo Update downloaded successfully.
     echo Updating current version...
@@ -161,6 +171,9 @@ if exist "%TEMP%\network-tools-updated.bat" (
         goto menu
     )
     echo Update applied successfully!
+    
+    :: Store the current date and time as the last update
+    echo %DATE% %TIME% > last_update.txt
     timeout /t 2 >nul
     echo Restarting the script...
     exit
