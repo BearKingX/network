@@ -3,7 +3,7 @@ setlocal enabledelayedexpansion
 mode con: cols=100 lines=3000
 
 :: Predefined string of spaces for padding output (100 spaces)
-set "sp=                                                                                                    "
+set "sp=                                                                                                "
 
 :strlen
 set "s=%~1"
@@ -56,26 +56,14 @@ for /f "tokens=2,* delims=:" %%A in ('systeminfo ^| findstr /B /C:"OS Name:"') d
 for /f "tokens=2,* delims=:" %%A in ('systeminfo ^| findstr /B /C:"OS Version:"') do set "OSVer=%%B"
 for /f "tokens=2,* delims=:" %%A in ('systeminfo ^| findstr /B /C:"System Type:"') do set "SysType=%%B"
 for /f "tokens=2,* delims=:" %%A in ('systeminfo ^| findstr /B /C:"Total Physical Memory:"') do set "PhysMem=%%B"
-set "line= OS Name: !OSName!"
-call :strlen "!line!" len
-set /a pad=98 - len
-set "spaces=!sp:~0,%pad%!"
-echo ^|!line!!spaces!^|
-set "line= OS Version: !OSVer!"
-call :strlen "!line!" len
-set /a pad=98 - len
-set "spaces=!sp:~0,%pad%!"
-echo ^|!line!!spaces!^|
-set "line= System Type: !SysType!"
-call :strlen "!line!" len
-set /a pad=98 - len
-set "spaces=!sp:~0,%pad%!"
-echo ^|!line!!spaces!^|
-set "line= Total Physical Memory: !PhysMem!"
-call :strlen "!line!" len
-set /a pad=98 - len
-set "spaces=!sp:~0,%pad%!"
-echo ^|!line!!spaces!^|
+for %%V in (" OS Name: !OSName!" " OS Version: !OSVer!" " System Type: !SysType!" " Total Physical Memory: !PhysMem!") do (
+    set "line=%%~V"
+    call :strlen "!line!" len
+    set /a pad=98-len
+    if !pad! lss 0 set pad=0
+    set "spaces=!sp:~0,%pad%!"
+    echo ^|!line!!spaces!^|
+)
 echo +--------------------------------------------------------------------------------------------------+
 echo.
 echo Press any key to return to Main Menu...
@@ -195,21 +183,25 @@ if defined currSSID (
   set "line= Current Wi-Fi SSID: !currSSID!"
   call :strlen "!line!" len
   set /a pad=98-len
+  if !pad! lss 0 set pad=0
   set "spaces=!sp:~0,%pad%!"
   echo ^|!line!!spaces!^|
 )
 echo +--------------------------------------------------------------------------------------------------+
 for /f "tokens=2,* delims=:" %%A in ('netsh wlan show profiles ^| findstr "All User Profile"') do (
   set "profile=%%B"
-  call :strlen " Profile Name: !profile!" len
+  set "line= Profile Name: !profile!"
+  call :strlen "!line!" len
   set /a pad=98-len
+  if !pad! lss 0 set pad=0
   set "spaces=!sp:~0,%pad%!"
-  echo ^| Profile Name: !profile!!spaces!^|
+  echo ^|!line!!spaces!^|
   for /f "tokens=2,* delims=:" %%C in ('netsh wlan show profile name^="%%B" key=clear ^| findstr "Key Content"') do (
     set "pass=%%D"
     set "line= Password: !pass!"
     call :strlen "!line!" plen
     set /a pad=98-plen
+    if !pad! lss 0 set pad=0
     set "spaces=!sp:~0,%pad%!"
     echo ^|!line!!spaces!^|
   )
