@@ -1,230 +1,269 @@
 @echo off
-setlocal EnableDelayedExpansion
-title Network Utility Tool
-color 0A
-mode con: cols=100 lines=30
+setlocal enabledelayedexpansion
+mode con: cols=100 lines=3000
 
-:: === AUTOMATIC UPDATE STATUS CHECK ===
-set "updateURL=https://raw.githubusercontent.com/BearKingX/network/main/network-tools.bat"
-set "tempScript=%TEMP%\network-tools-updated.bat"
-set "status=Unable to check updates"
+:: Predefined string of spaces for padding output (100 spaces)
+set "sp=                                                                                                    "
 
-curl -s -o "%tempScript%" "%updateURL%" 2>nul
-if exist "%tempScript%" (
-    fc /b "%~f0" "%tempScript%" >nul
-    if errorlevel 1 (
-        set "status=New update available!"
-    ) else (
-        set "status=Up to date"
-    )
-    del "%tempScript%" >nul 2>&1
+:strlen
+set "s=%~1"
+set "len=0"
+:strlen_loop
+if defined s (
+    set "s=!s:~1!"
+    set /a len+=1
+    goto strlen_loop
 )
+set %2=%len%
+exit /b
 
-:menu
+:mainMenu
 cls
-color 0A
-echo +==================================================================================================+
-echo ^|                                  NETWORK UTILITY TOOL v1.7                                     ^|
-echo +==================================================================================================+
-echo ^| Status: !status!                                                                                ^|
 echo +--------------------------------------------------------------------------------------------------+
-echo ^| [1]  View Computer Information                                                                  ^|
-echo ^| [2]  Reset Network                                                                              ^|
-echo ^| [3]  Manage Temp Files (Check/Delete)                                                           ^|
-echo ^| [4]  Ping Test                                                                                  ^|
-echo ^| [5]  Active Network Connections                                                                 ^|
-echo ^| [6]  View Environment Variables                                                                 ^|
-echo ^| [7]  View Running Processes                                                                     ^|
-echo ^| [8]  List Wi-Fi Profiles & Passwords                                                            ^|
-echo ^| [9]  Check for Updates                                                                          ^|
-echo ^| [10] Exit                                                                                       ^|
-echo +==================================================================================================+
-<nul set /p="Select an option (1-10): "
-set /p option=
-if "%option%"=="1" goto computerInfo
-if "%option%"=="2" goto resetNetwork
-if "%option%"=="3" goto manageTempFiles
-if "%option%"=="4" goto pingTest
-if "%option%"=="5" goto netConnections
-if "%option%"=="6" goto viewEnv
-if "%option%"=="7" goto viewProcs
-if "%option%"=="8" goto wifiList
-if "%option%"=="9" goto manualUpdate
-if "%option%"=="10" exit
-goto menu
-
-:computerInfo
-cls
-echo +==================================================================================================+
-echo ^|                             COMPUTER INFORMATION                                                ^|
+echo ^|                                   Network Utility Tool (v1.0)                                    ^|
 echo +--------------------------------------------------------------------------------------------------+
-echo ^| Hostname       : %COMPUTERNAME%                                                                 ^|
-echo ^| Logged User    : %USERNAME%                                                                    ^|
-for /f "skip=1 tokens=*" %%A in ('wmic os get Caption') do if not "%%A"=="" echo ^| OS Name        : %%A ^| & goto cpu
-:cpu
-for /f "skip=1 tokens=*" %%A in ('wmic cpu get Name') do if not "%%A"=="" echo ^| CPU            : %%A ^| & goto ip
-:ip
-for /f "tokens=2 delims=:" %%I in ('ipconfig ^| findstr "IPv4"') do set ip=%%I
-echo ^| IP Address     :!ip!                                                                         ^|
-for /f "tokens=2 delims=:" %%I in ('ipconfig ^| findstr "Subnet Mask"') do set subnet=%%I
-echo ^| Subnet Mask    :!subnet!                                                                     ^|
-for /f "tokens=2 delims=:" %%I in ('ipconfig ^| findstr "DNS Servers"') do set dns=%%I
-echo ^| DNS Server     :!dns!                                                                        ^|
-for /f "skip=1 tokens=*" %%A in ('wmic bios get SerialNumber') do if not "%%A"=="" echo ^| BIOS Serial No.: %%A ^| & goto mem
-:mem
-for /f "tokens=2 delims==" %%A in ('wmic OS get TotalVisibleMemorySize /value') do set ram=%%A
-set /a ramMB=ram/1024
-echo ^| Total RAM      : !ramMB! MB                                                                   ^|
+echo ^| 1. View System Info                                                                              ^|
+echo ^| 2. Reset Network                                                                                 ^|
+echo ^| 3. Manage Temp Files                                                                             ^|
+echo ^| 4. Ping Host                                                                                     ^|
+echo ^| 5. View Active Connections                                                                       ^|
+echo ^| 6. Wi-Fi Profiles & Passwords                                                                    ^|
+echo ^| 7. Check for Updates                                                                             ^|
+echo ^| 8. Other Tools                                                                                   ^|
+echo ^| 9. Exit                                                                                          ^|
 echo +--------------------------------------------------------------------------------------------------+
-pause
-goto menu
+set /p choice="Enter your choice: "
 
-:resetNetwork
+if "%choice%"=="1" goto sysinfo
+if "%choice%"=="2" goto resetnet
+if "%choice%"=="3" goto managetemp
+if "%choice%"=="4" goto pinghost
+if "%choice%"=="5" goto conn
+if "%choice%"=="6" goto wifilist
+if "%choice%"=="7" goto checkupdates
+if "%choice%"=="8" goto othertools
+if "%choice%"=="9" goto exit
+echo Invalid choice. Press any key to try again...
+pause >nul
+goto mainMenu
+
+:sysinfo
 cls
-echo +==================================================================================================+
-echo ^|                                NETWORK RESET                                                   ^|
 echo +--------------------------------------------------------------------------------------------------+
-echo ^| This will:                                                                                     ^|
-echo ^|  - Release current IP                                                                           ^|
-echo ^|  - Flush DNS cache                                                                              ^|
-echo ^|  - Renew IP                                                                                     ^|
-echo ^|  - Reconnect to Wi-Fi                                                                           ^|
+echo ^|                                  System Information                                           ^|
 echo +--------------------------------------------------------------------------------------------------+
-<nul set /p="Proceed (Y/N)? "
-set /p confirm=
-if /i "%confirm%"=="Y" goto performNetworkReset
-goto menu
-
-:performNetworkReset
-cls
-echo Releasing IP...
-ipconfig /release || (echo Error releasing IP & pause & goto menu)
-echo Flushing DNS...
-ipconfig /flushdns || (echo Error flushing DNS & pause & goto menu)
-echo Renewing IP...
-ipconfig /renew || (echo Error renewing IP & pause & goto menu)
-echo Disconnecting Wi-Fi...
-netsh wlan disconnect >nul 2>&1
-echo Reconnecting Wi-Fi...
-netsh wlan connect name="WiFiName" || (echo Error reconnecting & pause & goto menu)
-echo Network reset complete!
-pause
-goto menu
-
-:manageTempFiles
-cls
-set "tempDir=%TEMP%"
-set /a count=0, size=0
-for /r "%tempDir%" %%F in (*) do (
-  set /a count+=1
-  set /a size+=%%~zF
-)
-set /a sizeMB=size/1048576
-echo +==================================================================================================+
-echo ^|                              TEMP FILE CLEANER                                                 ^|
+for /f "tokens=2,* delims=:" %%A in ('systeminfo ^| findstr /B /C:"OS Name:"') do set "OSName=%%B"
+for /f "tokens=2,* delims=:" %%A in ('systeminfo ^| findstr /B /C:"OS Version:"') do set "OSVer=%%B"
+for /f "tokens=2,* delims=:" %%A in ('systeminfo ^| findstr /B /C:"System Type:"') do set "SysType=%%B"
+for /f "tokens=2,* delims=:" %%A in ('systeminfo ^| findstr /B /C:"Total Physical Memory:"') do set "PhysMem=%%B"
+set "line= OS Name: !OSName!"
+call :strlen "!line!" len
+set /a pad=98 - len
+set "spaces=!sp:~0,%pad%!"
+echo ^|!line!!spaces!^|
+set "line= OS Version: !OSVer!"
+call :strlen "!line!" len
+set /a pad=98 - len
+set "spaces=!sp:~0,%pad%!"
+echo ^|!line!!spaces!^|
+set "line= System Type: !SysType!"
+call :strlen "!line!" len
+set /a pad=98 - len
+set "spaces=!sp:~0,%pad%!"
+echo ^|!line!!spaces!^|
+set "line= Total Physical Memory: !PhysMem!"
+call :strlen "!line!" len
+set /a pad=98 - len
+set "spaces=!sp:~0,%pad%!"
+echo ^|!line!!spaces!^|
 echo +--------------------------------------------------------------------------------------------------+
-echo ^| Temp Folder : %tempDir%                                                                        ^|
-echo ^| File Count  : %count%                                                                          ^|
-echo ^| Used Space  : %sizeMB% MB                                                                      ^|
+echo.
+echo Press any key to return to Main Menu...
+pause >nul
+goto mainMenu
+
+:resetnet
+cls
 echo +--------------------------------------------------------------------------------------------------+
-<nul set /p="Delete all temp files? (Y/N): "
-set /p del=
-if /i "%del%"=="Y" (
-  del /f /s /q "%tempDir%\*" >nul 2>&1
-  for /d %%D in ("%tempDir%\*") do rd /s /q "%%D" >nul 2>&1
-  if errorlevel 1 (echo Error deleting some files/folders.) else (echo All temp files deleted.)
-) else echo Operation cancelled.
-pause
-goto menu
-
-:pingTest
-cls
-<nul set /p="Enter host to ping (default 8.8.8.8): "
-set /p host=
-if "%host%"=="" set host=8.8.8.8
-echo Pinging %host%...
-ping %host% -n 4
-pause
-goto menu
-
-:netConnections
-cls
-echo Active TCP/UDP Connections:
-netstat -an
-pause
-goto menu
-
-:viewEnv
-cls
-echo Environment Variables:
-set
-pause
-goto menu
-
-:viewProcs
-cls
-echo Running Processes:
-tasklist
-pause
-goto menu
-
-:wifiList
-cls
-echo +==================================================================================================+
-echo ^|                              WIFI PROFILES                                                      ^|
+echo ^|                                        Network Reset                                          ^|
 echo +--------------------------------------------------------------------------------------------------+
-set i=0
-for /f "tokens=2 delims=:" %%G in ('netsh wlan show profiles ^| findstr "All User Profile"') do (
-  set /a i+=1
-  set "wf[!i!]=%%~G"
-  echo  !i!) %%~G
-)
-if %i% EQU 0 (
-  echo No Wi-Fi profiles found.
+echo Releasing IP addresses...
+ipconfig /release >nul 2>&1
+if errorlevel 1 (
+  echo Error releasing IP addresses. Please check your network adapters.
   pause
-  goto menu
-)
-echo +--------------------------------------------------------------------------------------------------+
-<nul set /p="Select profile number (1-%i%): "
-set /p choice=
-if not defined wf[%choice%] (
-  echo Invalid choice.
-  pause
-  goto menu
-)
-set "sel=!wf[%choice%]!"
-echo Profile: !sel!
-echo Password:
-netsh wlan show profile name="!sel!" key=clear ^| findstr "Key Content"
-pause
-goto menu
-
-:manualUpdate
-color 0E
-cls
-echo +==================================================================================================+
-echo ^|                            CHECK FOR UPDATES                                                    ^|
-echo +--------------------------------------------------------------------------------------------------+
-echo ^| Clearing cache...                                                                              ^|
-ipconfig /flushdns >nul 2>&1
-netsh winhttp reset proxy >nul 2>&1
-certutil -urlcache * delete >nul 2>&1
-RunDll32.exe InetCpl.cpl,ClearMyTracksByProcess 255 >nul 2>&1
-echo ^| Fetching update from GitHub...                                                                ^|
-curl -s -o "%tempScript%" "%updateURL%"
-if exist "%tempScript%" (
-  echo Update downloaded.
-  copy /y "%tempScript%" "%~f0" >nul
-  echo %DATE% %TIME%>last_update.txt
-  del "%tempScript%" >nul 2>&1
-  echo Cache cleared.
-  echo Restarting...
-  timeout /t 2 >nul
-  start "" "%~f0"
-  exit
+  goto mainMenu
 ) else (
-  echo Failed to download update.
-  pause
-  color 0A
-  goto menu
+  echo IP addresses released successfully.
 )
+echo Renewing IP addresses...
+ipconfig /renew >nul 2>&1
+if errorlevel 1 (
+  echo Error renewing IP addresses. Please ensure network connectivity.
+  pause
+  goto mainMenu
+) else (
+  echo IP addresses renewed successfully.
+)
+echo Resetting Winsock Catalog...
+netsh winsock reset >nul 2>&1
+if errorlevel 1 (
+  echo Winsock reset failed.
+) else (
+  echo Winsock reset succeeded.
+)
+echo Resetting TCP/IP Stack...
+netsh int ip reset >nul 2>&1
+if errorlevel 1 (
+  echo TCP/IP reset failed.
+) else (
+  echo TCP/IP stack reset succeeded.
+)
+echo +--------------------------------------------------------------------------------------------------+
+echo.
+echo Press any key to return to Main Menu...
+pause >nul
+goto mainMenu
+
+:managetemp
+cls
+echo +--------------------------------------------------------------------------------------------------+
+echo ^|                                 Manage Temporary Files                                       ^|
+echo +--------------------------------------------------------------------------------------------------+
+echo Cleaning User Temp folder...
+del /f /s /q "%temp%\*" >nul 2>&1
+if errorlevel 1 (
+  echo Error occurred while cleaning user temp files.
+) else (
+  echo User temp files deleted successfully.
+)
+echo Cleaning Windows Temp folder...
+del /f /s /q "C:\Windows\Temp\*" >nul 2>&1
+if errorlevel 1 (
+  echo Error occurred while cleaning system temp files.
+) else (
+  echo System temp files deleted successfully.
+)
+echo +--------------------------------------------------------------------------------------------------+
+echo.
+echo Press any key to return to Main Menu...
+pause >nul
+goto mainMenu
+
+:pinghost
+cls
+echo +--------------------------------------------------------------------------------------------------+
+echo ^|                                         Ping Host                                             ^|
+echo +--------------------------------------------------------------------------------------------------+
+echo.
+echo Enter host name or IP address to ping:
+set /p host=Host/IP: 
+echo Pinging %host% (4 packets)...
+ping -n 4 %host%
+if errorlevel 1 (
+  echo Ping failed or host unreachable.
+) else (
+  echo Ping successful.
+)
+echo +--------------------------------------------------------------------------------------------------+
+echo.
+echo Press any key to return to Main Menu...
+pause >nul
+goto mainMenu
+
+:conn
+cls
+echo +--------------------------------------------------------------------------------------------------+
+echo ^|                         Active Connections (ESTABLISHED)                                    ^|
+echo +--------------------------------------------------------------------------------------------------+
+echo Listing active TCP connections...
+netstat -an | findstr "ESTABLISHED"
+if errorlevel 1 echo No established connections found or command failed.
+echo +--------------------------------------------------------------------------------------------------+
+echo.
+echo Press any key to return to Main Menu...
+pause >nul
+goto mainMenu
+
+:wifilist
+cls
+echo +--------------------------------------------------------------------------------------------------+
+echo ^|                         Wi-Fi Profiles and Passwords                                        ^|
+echo +--------------------------------------------------------------------------------------------------+
+for /f "tokens=2,* delims=:" %%A in ('netsh wlan show interfaces ^| findstr /C:" SSID" ^| findstr /V "BSSID"') do set "currSSID=%%B"
+if defined currSSID (
+  set "line= Current Wi-Fi SSID: !currSSID!"
+  call :strlen "!line!" len
+  set /a pad=98-len
+  set "spaces=!sp:~0,%pad%!"
+  echo ^|!line!!spaces!^|
+)
+echo +--------------------------------------------------------------------------------------------------+
+for /f "tokens=2,* delims=:" %%A in ('netsh wlan show profiles ^| findstr "All User Profile"') do (
+  set "profile=%%B"
+  call :strlen " Profile Name: !profile!" len
+  set /a pad=98-len
+  set "spaces=!sp:~0,%pad%!"
+  echo ^| Profile Name: !profile!!spaces!^|
+  for /f "tokens=2,* delims=:" %%C in ('netsh wlan show profile name^="%%B" key=clear ^| findstr "Key Content"') do (
+    set "pass=%%D"
+    set "line= Password: !pass!"
+    call :strlen "!line!" plen
+    set /a pad=98-plen
+    set "spaces=!sp:~0,%pad%!"
+    echo ^|!line!!spaces!^|
+  )
+)
+echo +--------------------------------------------------------------------------------------------------+
+echo.
+echo Press any key to return to Main Menu...
+pause >nul
+goto mainMenu
+
+:checkupdates
+cls
+echo +--------------------------------------------------------------------------------------------------+
+echo ^|                                   Check for Updates                                          ^|
+echo +--------------------------------------------------------------------------------------------------+
+echo Checking internet connectivity...
+ping -n 1 google.com >nul 2>&1
+if errorlevel 1 (
+  echo No internet connection. Cannot check updates.
+) else (
+  echo Internet is available.
+)
+echo.
+echo Please use Windows Update from Settings or Control Panel to check for system updates.
+echo +--------------------------------------------------------------------------------------------------+
+echo.
+echo Press any key to return to Main Menu...
+pause >nul
+goto mainMenu
+
+:othertools
+cls
+echo +--------------------------------------------------------------------------------------------------+
+echo ^|                                  Other Network Tools                                        ^|
+echo +--------------------------------------------------------------------------------------------------+
+echo Flushing DNS resolver cache...
+ipconfig /flushdns >nul 2>&1
+if errorlevel 1 (
+  echo Failed to flush DNS cache.
+) else (
+  echo DNS cache flushed successfully.
+)
+echo.
+echo Displaying IP configuration...
+ipconfig
+echo.
+echo Displaying ARP Table...
+arp -a
+echo +--------------------------------------------------------------------------------------------------+
+echo.
+echo Press any key to return to Main Menu...
+pause >nul
+goto mainMenu
+
+:exit
+echo Exiting Network Utility Tool. Goodbye!
+exit
