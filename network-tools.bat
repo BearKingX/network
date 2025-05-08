@@ -2,7 +2,7 @@
 setlocal EnableDelayedExpansion
 title Network Utility Tool
 color 0A
-mode con: cols=100 lines=30
+mode con: cols=100 lines=9999
 
 :: === AUTOMATIC UPDATE STATUS CHECK ===
 set "updateURL=https://raw.githubusercontent.com/BearKingX/network/main/network-tools.bat"
@@ -25,22 +25,22 @@ if exist "%tempScript%" (
 :menu
 cls
 color 0A
-echo +================================================================+
-echo ^|               NETWORK UTILITY TOOL v1.7                    ^|
-echo +================================================================+
-echo ^| Status: !status!                                            ^|
-echo +----------------------------------------------------------------+
-echo ^| [1] View Computer Information                                ^|
-echo ^| [2] Reset Network                                            ^|
-echo ^| [3] Manage Temp Files (Check/Delete)                         ^|
-echo ^| [4] Ping Test                                                ^|
-echo ^| [5] Active Network Connections                               ^|
-echo ^| [6] View Environment Variables                               ^|
-echo ^| [7] View Running Processes                                   ^|
-echo ^| [8] List Wi-Fi Profiles ^& Passwords                         ^|
-echo ^| [9] Check for Updates                                        ^|
-echo ^| [10] Exit                                                    ^|
-echo +================================================================+
+echo +==================================================================================================+
+echo ^|                                  NETWORK UTILITY TOOL v1.7                                     ^|
+echo +==================================================================================================+
+echo ^| Status: !status!                                                                                ^|
+echo +--------------------------------------------------------------------------------------------------+
+echo ^| [1] View Computer Information                                                                   ^|
+echo ^| [2] Reset Network                                                                               ^|
+echo ^| [3] Manage Temp Files (Check/Delete)                                                            ^|
+echo ^| [4] Ping Test                                                                                   ^|
+echo ^| [5] Active Network Connections                                                                  ^|
+echo ^| [6] View Environment Variables                                                                  ^|
+echo ^| [7] View Running Processes                                                                      ^|
+echo ^| [8] List Wi-Fi Profiles ^& Passwords                                                            ^|
+echo ^| [9] Check for Updates                                                                           ^|
+echo ^| [10] Exit                                                                                       ^|
+echo +==================================================================================================+
 <nul set /p="Select an option (1-10): "
 set /p option=
 if "%option%"=="1" goto computerInfo
@@ -58,38 +58,42 @@ goto menu
 :: === COMPUTER INFORMATION ===
 :computerInfo
 cls
-echo +----------------------- COMPUTER INFORMATION -----------------------+
-echo ^| Hostname       : %COMPUTERNAME%                                 ^|
-echo ^| Logged User    : %USERNAME%                                      ^|
-for /f "skip=1 tokens=*" %%A in ('wmic os get Caption') do if not "%%A"=="" echo ^| OS Name        : %%A & goto cpu
+echo +==================================================================================================+
+echo ^|                                COMPUTER INFORMATION                                            ^|
+echo +--------------------------------------------------------------------------------------------------+
+echo ^| Hostname        : %COMPUTERNAME%                                                                ^|
+echo ^| Logged User     : %USERNAME%                                                                    ^|
+for /f "skip=1 tokens=*" %%A in ('wmic os get Caption') do if not "%%A"=="" echo ^| OS Name         : %%A                                                              ^| & goto cpu
 :cpu
-for /f "skip=1 tokens=*" %%A in ('wmic cpu get Name') do if not "%%A"=="" echo ^| CPU            : %%A & goto ip
+for /f "skip=1 tokens=*" %%A in ('wmic cpu get Name') do if not "%%A"=="" echo ^| CPU             : %%A                                                              ^| & goto ip
 :ip
 for /f "tokens=2 delims=:" %%I in ('ipconfig ^| findstr "IPv4"') do set ip=%%I
-echo ^| IP Address     :!ip!                                           ^|
+echo ^| IP Address      :!ip!                                                                            ^|
 for /f "tokens=2 delims=:" %%I in ('ipconfig ^| findstr "Subnet Mask"') do set subnet=%%I
-echo ^| Subnet Mask    :!subnet!                                       ^|
+echo ^| Subnet Mask     :!subnet!                                                                        ^|
 for /f "tokens=2 delims=:" %%I in ('ipconfig ^| findstr "DNS Servers"') do set dns=%%I
-echo ^| DNS Server     :!dns!                                          ^|
-for /f "skip=1 tokens=*" %%A in ('wmic bios get SerialNumber') do if not "%%A"=="" echo ^| BIOS Serial No.: %%A & goto mem
+echo ^| DNS Server      :!dns!                                                                           ^|
+for /f "skip=1 tokens=*" %%A in ('wmic bios get SerialNumber') do if not "%%A"=="" echo ^| BIOS Serial No.: %%A                                                            ^| & goto mem
 :mem
 for /f "tokens=2 delims==" %%A in ('wmic OS get TotalVisibleMemorySize /value') do set ram=%%A
 set /a ramMB=ram/1024
-echo ^| Total RAM      : !ramMB! MB                                   ^|
-echo +------------------------------------------------------------------+
+echo ^| Total RAM       : !ramMB! MB                                                                     ^|
+echo +--------------------------------------------------------------------------------------------------+
 pause
 goto menu
 
 :: === RESET NETWORK ===
 :resetNetwork
 cls
-echo +----------------------- NETWORK RESET ------------------------+
-echo ^| This will:                                               ^|
-echo ^|  - Release current IP                                     ^|
-echo ^|  - Flush DNS cache                                        ^|
-echo ^|  - Renew IP                                               ^|
-echo ^|  - Reconnect to Wi-Fi                                     ^|
-echo +------------------------------------------------------------+
+echo +==================================================================================================+
+echo ^|                                      NETWORK RESET                                              ^|
+echo +--------------------------------------------------------------------------------------------------+
+echo ^| This will:                                                                                      ^|
+echo ^|  - Release current IP                                                                           ^|
+echo ^|  - Flush DNS cache                                                                              ^|
+echo ^|  - Renew IP                                                                                     ^|
+echo ^|  - Reconnect to Wi-Fi                                                                           ^|
+echo +--------------------------------------------------------------------------------------------------+
 <nul set /p="Proceed (Y/N)? "
 set /p confirm=
 if /i "%confirm%"=="Y" goto performNetworkReset
@@ -121,11 +125,13 @@ for /r "%tempDir%" %%F in (*) do (
   set /a size+=%%~zF
 )
 set /a sizeMB=size/1048576
-echo +----------------------- TEMP FILE CLEANER -----------------------+
-echo ^| Temp Folder : %tempDir%                                      ^|
-echo ^| File Count  : %count%                                         ^|
-echo ^| Used Space  : %sizeMB% MB                                     ^|
-echo +----------------------------------------------------------------+
+echo +==================================================================================================+
+echo ^|                                   TEMP FILE CLEANER                                             ^|
+echo +--------------------------------------------------------------------------------------------------+
+echo ^| Temp Folder     : %tempDir%                                                                     ^|
+echo ^| File Count      : %count%                                                                       ^|
+echo ^| Used Space      : %sizeMB% MB                                                                   ^|
+echo +--------------------------------------------------------------------------------------------------+
 <nul set /p="Delete all temp files? (Y/N): "
 set /p del=
 if /i "%del%"=="Y" (
@@ -174,7 +180,9 @@ goto menu
 :: === LIST WIFI PROFILES & PASSWORDS ===
 :wifiList
 cls
-echo +----------------------- WIFI PROFILES ------------------------+
+echo +==================================================================================================+
+echo ^|                                  WIFI PROFILES                                                  ^|
+echo +--------------------------------------------------------------------------------------------------+
 set i=0
 for /f "tokens=2 delims=:" %%G in ('netsh wlan show profiles ^| findstr "All User Profile"') do (
   set /a i+=1
@@ -186,7 +194,7 @@ if %i% EQU 0 (
   pause
   goto menu
 )
-echo +-------------------------------------------------------------+
+echo +--------------------------------------------------------------------------------------------------+
 <nul set /p="Select profile number (1-%i%): "
 set /p choice=
 if not defined wf[%choice%] (
@@ -205,16 +213,18 @@ goto menu
 :manualUpdate
 color 0E
 cls
-echo +----------------------- CHECK FOR UPDATES -----------------------+
-echo ^| Clearing cache...                                            ^|
-echo +----------------------------------------------------------------+
+echo +==================================================================================================+
+echo ^|                                 CHECK FOR UPDATES                                               ^|
+echo +--------------------------------------------------------------------------------------------------+
+echo ^| Clearing cache...                                                                               ^|
+echo +--------------------------------------------------------------------------------------------------+
 ipconfig /flushdns >nul 2>&1
 netsh winhttp reset proxy >nul 2>&1
 certutil -urlcache * delete >nul 2>&1
 RunDll32.exe InetCpl.cpl,ClearMyTracksByProcess 255 >nul 2>&1
 
-echo ^| Fetching update from GitHub...                              ^|
-echo +----------------------------------------------------------------+
+echo ^| Fetching update from GitHub...                                                                  ^|
+echo +--------------------------------------------------------------------------------------------------+
 curl -s -o "%tempScript%" "%updateURL%"
 if exist "%tempScript%" (
   echo Update downloaded.
